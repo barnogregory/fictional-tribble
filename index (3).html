@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#030b1a">
+<title>Agent Qualité — TFFR Guadeloupe</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Exo+2:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030b1a;--bg2:#071224;--bg3:#0c1c35;--bg4:#112240;
+  --border:rgba(0,200,255,0.1);--border2:rgba(0,200,255,0.2);
+  --cyan:#00c8ff;--cyan-dim:rgba(0,200,255,0.08);--cyan-glow:rgba(0,200,255,0.15);
+  --green:#00e5a0;--green-dim:rgba(0,229,160,0.1);
+  --red:#ff4060;--red-dim:rgba(255,64,96,0.1);
+  --amber:#ffb830;--amber-dim:rgba(255,184,48,0.1);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,0.1);
+  --text:#c8dff0;--muted:#5a7a9a;--white:#e8f4ff;
+  --fd:'Exo 2',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--fd);overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--cyan),#0066aa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px}
+.logo-text{font-family:var(--fd);font-weight:800;font-size:17px;letter-spacing:.5px;color:var(--white)}
+.logo-sub{font-family:var(--fm);font-size:9px;color:var(--cyan);letter-spacing:.1em;margin-top:-3px}
+.header-right{display:flex;align-items:center;gap:12px}
+.live-dot{display:flex;align-items:center;gap:5px;font-family:var(--fm);font-size:10px;color:var(--green)}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.hclock{font-family:var(--fm);font-size:12px;color:var(--cyan)}
+.hdate{font-family:var(--fm);font-size:10px;color:var(--muted)}
+
+/* SCROLL */
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px;padding-bottom:78px}
+.scroll::-webkit-scrollbar{width:3px}
+.scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* PANELS */
+.panel{display:none}.panel.active{display:block}
+
+/* CARDS */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:11px}
+.card-title{font-family:var(--fd);font-weight:700;font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--cyan);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ctag{font-family:var(--fm);font-size:9px;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:400}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:11px}
+.metric{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:10px;text-align:center}
+.metric-val{font-family:var(--fm);font-size:20px;font-weight:700}
+.metric-lbl{font-family:var(--fm);font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+
+/* FLIGHTS TABLE */
+.tab-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab-wrap::-webkit-scrollbar{height:3px}
+.tab-wrap::-webkit-scrollbar-thumb{background:var(--border2)}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:680px}
+thead th{background:var(--bg4);color:var(--cyan);font-family:var(--fm);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;padding:9px 10px;text-align:left;border-bottom:1px solid var(--border2);white-space:nowrap}
+tbody td{padding:9px 10px;border-bottom:1px solid var(--border);font-family:var(--fm);font-size:11px;vertical-align:middle;white-space:nowrap}
+tbody tr:hover td{background:var(--cyan-dim)}
+tbody tr:last-child td{border-bottom:none}
+.fl-num{color:var(--cyan);font-weight:700}
+.fl-airline{font-weight:500;color:var(--white)}
+.fl-route{color:var(--text)}
+.fl-time{font-weight:500}
+.fl-gate{background:var(--bg4);border:1px solid var(--border2);border-radius:5px;padding:2px 7px;color:var(--cyan);display:inline-block}
+.status{display:inline-block;font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:.06em;text-transform:uppercase}
+.s-land{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,229,160,0.2)}
+.s-dep{background:var(--cyan-dim);color:var(--cyan);border:1px solid rgba(0,200,255,0.2)}
+.s-del{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(255,184,48,0.2)}
+.s-can{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,64,96,0.2)}
+.s-board{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+.s-ok{background:var(--green-dim);color:var(--green)}
+
+/* FLIGHT TABS */
+.ftabs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
+.ftab{padding:6px 14px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);font-family:var(--fm);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.ftab.active,.ftab:hover{border-color:var(--cyan);background:var(--cyan-dim);color:var(--cyan)}
+
+/* CHECKLISTS */
+.checklist{display:flex;flex-direction:column;gap:6px}
+.cl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .15s}
+.cl-item:hover{border-color:var(--border2)}
+.cl-item.done{opacity:.6}
+.cl-cb{width:20px;height:20px;border-radius:5px;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s;background:transparent}
+.cl-item.done .cl-cb{background:var(--green);border-color:var(--green)}
+.cl-text{font-size:12px;color:var(--text);line-height:1.4}
+.cl-item.done .cl-text{text-decoration:line-through;color:var(--muted)}
+.cl-priority{font-family:var(--fm);font-size:9px;margin-top:3px}
+.p-high{color:var(--red)}.p-med{color:var(--amber)}.p-low{color:var(--green)}
+
+/* DOCS GRID */
+.docs-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.doc-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;text-decoration:none;transition:all .2s;display:block}
+.doc-card:hover{border-color:var(--cyan);background:var(--cyan-dim);transform:translateY(-1px)}
+.doc-icon{font-size:20px;margin-bottom:7px}
+.doc-title{font-size:12px;font-weight:600;color:var(--white);margin-bottom:4px;line-height:1.3}
+.doc-desc{font-size:10px;color:var(--muted);line-height:1.4}
+.doc-tag{font-family:var(--fm);font-size:9px;padding:2px 7px;border-radius:10px;margin-top:7px;display:inline-block}
+
+/* CONTACTS */
+.contact-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.contact-item:last-child{border-bottom:none}
+.contact-left{display:flex;align-items:center;gap:10px}
+.contact-avatar{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.contact-name{font-size:13px;font-weight:600;color:var(--white)}
+.contact-role{font-size:11px;color:var(--muted);margin-top:1px}
+.contact-right{display:flex;gap:6px}
+.call-btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--cyan);font-family:var(--fm);font-size:11px;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:4px;transition:all .15s}
+.call-btn:hover{background:var(--cyan-dim);border-color:var(--cyan)}
+.call-btn.urg{border-color:rgba(255,64,96,0.4);color:var(--red)}
+.call-btn.urg:hover{background:var(--red-dim)}
+
+/* INCIDENT FORM */
+.form-group{margin-bottom:11px}
+.form-label{font-family:var(--fm);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:block}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:var(--fm);font-size:12px;outline:none;transition:border-color .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--cyan)}
+.form-textarea{resize:vertical;min-height:80px}
+.form-select{appearance:none}
+.severity-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sev-btn{padding:9px 4px;border-radius:8px;text-align:center;border:1px solid var(--border);background:var(--bg3);font-family:var(--fm);font-size:10px;cursor:pointer;transition:all .15s;color:var(--muted)}
+.sev-btn.active,.sev-btn:hover{transform:scale(.98)}
+.sev-btn.s1.active{border-color:var(--green);background:var(--green-dim);color:var(--green)}
+.sev-btn.s2.active{border-color:var(--amber);background:var(--amber-dim);color:var(--amber)}
+.sev-btn.s3.active{border-color:rgba(255,120,50,0.4);background:rgba(255,120,50,0.1);color:#ff7832}
+.sev-btn.s4.active{border-color:var(--red);background:var(--red-dim);color:var(--red)}
+.submit-btn{width:100%;padding:13px;border-radius:10px;border:none;background:linear-gradient(135deg,#0066cc,var(--cyan));color:var(--bg);font-family:var(--fd);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:4px}
+.submit-btn:hover{opacity:.9;transform:translateY(-1px)}
+
+/* WEATHER & NOTAM */
+.wx-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px}
+.wx-item{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px;text-align:center}
+.wx-val{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--cyan)}
+.wx-lbl{font-family:var(--fm);font-size:9px;color:var(--muted);margin-top:3px;text-transform:uppercase}
+.notam-item{padding:10px 12px;background:var(--bg3);border-radius:8px;border-left:3px solid var(--amber);margin-bottom:7px}
+.notam-id{font-family:var(--fm);font-size:10px;color:var(--amber);font-weight:700;margin-bottom:3px}
+.notam-text{font-size:11px;color:var(--text);line-height:1.5}
+.notam-valid{font-family:var(--fm);font-size:9px;color:var(--muted);margin-top:4px}
+
+/* INFO BOX */
+.info-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.info-row:last-child{border-bottom:none}
+.info-key{font-family:var(--fm);font-size:10px;color:var(--muted);min-width:140px;flex-shrink:0}
+.info-val{color:var(--white);font-weight:500}
+
+/* BOTTOM NAV */
+.bnav{display:flex;border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0)}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;cursor:pointer;border:none;background:transparent;color:var(--muted);font-family:var(--fd);transition:color .15s}
+.nav-btn.active{color:var(--cyan)}
+.nav-icon{width:20px;height:20px}
+.nav-lbl{font-size:8px;font-family:var(--fm);letter-spacing:.05em;text-transform:uppercase}
+
+/* MISC */
+.section-sep{height:1px;background:var(--border);margin:14px 0}
+.badge-inline{font-family:var(--fm);font-size:9px;padding:2px 7px;border-radius:10px;vertical-align:middle}
+.up{color:var(--green)}.down{color:var(--red)}.warn{color:var(--amber)}
+.progress-bar{height:4px;background:var(--bg4);border-radius:2px;margin-top:8px}
+.progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .5s}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:11px 20px;font-size:12px;font-family:var(--fm);z-index:999;opacity:0;transition:all .3s;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:600px){
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .docs-grid{grid-template-columns:1fr}
+  .wx-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">✈️</div>
+    <div>
+      <div class="logo-text">AGENT QUALITÉ</div>
+      <div class="logo-sub">TFFR · PTP · GUADELOUPE MARYSE CONDÉ</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="live-dot"><div class="pulse"></div>LIVE</div>
+    <div>
+      <div class="hclock" id="clock">--:--:--</div>
+      <div class="hdate" id="hdate"></div>
+    </div>
+  </div>
+</div>
+
+<div class="scroll" id="scroll">
+
+<!-- ===== TABLEAU DE BORD ===== -->
+<div class="panel active" id="panel-dashboard">
+
+  <div class="metrics">
+    <div class="metric"><div class="metric-val up" id="m-arr">18</div><div class="metric-lbl">Arrivées/j</div></div>
+    <div class="metric"><div class="metric-val" style="color:var(--cyan)" id="m-dep">20</div><div class="metric-lbl">Départs/j</div></div>
+    <div class="metric"><div class="metric-val warn" id="m-del">3</div><div class="metric-lbl">Retards</div></div>
+    <div class="metric"><div class="metric-val down" id="m-inc">1</div><div class="metric-lbl">Incidents</div></div>
+  </div>
+
+  <!-- MÉTÉO TFFR -->
+  <div class="card">
+    <div class="card-title">Météo TFFR — Actuelle <span class="ctag" style="background:var(--cyan-dim);color:var(--cyan)">METAR LIVE</span></div>
+    <div class="wx-grid">
+      <div class="wx-item"><div class="wx-val">27°C</div><div class="wx-lbl">Température</div></div>
+      <div class="wx-item"><div class="wx-val">12kt</div><div class="wx-lbl">Vent 090°</div></div>
+      <div class="wx-item"><div class="wx-val">9999</div><div class="wx-lbl">Visibilité (m)</div></div>
+      <div class="wx-item"><div class="wx-val">SCT025</div><div class="wx-lbl">Nuages</div></div>
+      <div class="wx-item"><div class="wx-val">1013</div><div class="wx-lbl">QNH (hPa)</div></div>
+      <div class="wx-item"><div class="wx-val up">VFR</div><div class="wx-lbl">Conditions</div></div>
+    </div>
+    <div style="font-family:var(--fm);font-size:9px;color:var(--muted);margin-top:6px">
+      METAR TFFR 190800Z 09012KT 9999 SCT025 27/23 Q1013 NOSIG
+    </div>
+  </div>
+
+  <!-- NOTAM -->
+  <div class="card">
+    <div class="card-title">NOTAMs actifs — TFFR <span class="ctag" style="background:var(--amber-dim);color:var(--amber)">3 actifs</span></div>
+    <div class="notam-item">
+      <div class="notam-id">NOTAM A0142/26</div>
+      <div class="notam-text">Travaux de peinture piste 12/30 — Circulation véhicules restreinte côté piste. Vitesse limitée à 30km/h zone T1.</div>
+      <div class="notam-valid">Valide : 19 MAR 06:00 → 21 MAR 18:00 UTC</div>
+    </div>
+    <div class="notam-item" style="border-left-color:var(--red)">
+      <div class="notam-id" style="color:var(--red)">NOTAM A0139/26 — URGENT</div>
+      <div class="notam-text">Balisage ILS piste 30 hors service. Approches ILS 30 non disponibles. CAT I piste 12 uniquement.</div>
+      <div class="notam-valid">Valide : 18 MAR 14:00 → 22 MAR 12:00 UTC</div>
+    </div>
+    <div class="notam-item" style="border-left-color:var(--cyan)">
+      <div class="notam-id" style="color:var(--cyan)">NOTAM A0135/26</div>
+      <div class="notam-text">Fréquence ATIS TFFR modifiée : 128.575 MHz. Ancienne fréquence 128.550 MHz désactivée.</div>
+      <div class="notam-valid">Valide : 17 MAR 00:00 → 31 MAR 23:59 UTC</div>
+    </div>
+  </div>
+
+  <!-- INFOS AÉROPORT -->
+  <div class="card">
+    <div class="card-title">Informations aéroport</div>
+    <div class="info-row"><span class="info-key">Nom officiel</span><span class="info-val">Aéroport Guadeloupe Maryse Condé</span></div>
+    <div class="info-row"><span class="info-key">Code IATA / OACI</span><span class="info-val">PTP / TFFR</span></div>
+    <div class="info-row"><span class="info-key">Terminaux</span><span class="info-val">T1 (long-courriers) · T2 (régional)</span></div>
+    <div class="info-row"><span class="info-key">Piste principale</span><span class="info-val">12/30 — 3 500 m</span></div>
+    <div class="info-row"><span class="info-key">Trafic 2025</span><span class="info-val">2 250 000 passagers (+4.4%)</span></div>
+    <div class="info-row"><span class="info-key">Gestionnaire</span><span class="info-val">SAS Guadeloupe Pôle Caraïbes</span></div>
+    <div class="info-row"><span class="info-key">DSAC compétente</span><span class="info-val">DSAC Antilles-Guyane</span></div>
+    <div class="info-row"><span class="info-key">Altitude</span><span class="info-val">11 m / 36 ft AMSL</span></div>
+  </div>
+</div>
+
+<!-- ===== VOLS ===== -->
+<div class="panel" id="panel-vols">
+
+  <div class="ftabs">
+    <button class="ftab active" onclick="showFlights('all',this)">Tous les vols</button>
+    <button class="ftab" onclick="showFlights('arr',this)">⬇ Arrivées</button>
+    <button class="ftab" onclick="showFlights('dep',this)">⬆ Départs</button>
+    <button class="ftab" onclick="showFlights('del',this)">⚠ Retards</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span id="flights-title">Tous les vols — <span id="fl-date"></span></span>
+      <span class="ctag" style="background:var(--green-dim);color:var(--green)">MAJ AUTO</span>
+    </div>
+    <div class="tab-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Vol</th><th>Compagnie</th><th>Origine / Dest.</th>
+            <th>STD/STA</th><th>ETD/ETA</th><th>Porte</th>
+            <th>Appareil</th><th>Statut</th><th>Qualité</th>
+          </tr>
+        </thead>
+        <tbody id="flights-body"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:10px;font-family:var(--fm);font-size:9px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap">
+      <span>Source : <a href="https://www.guadeloupe.aeroport.fr/" target="_blank" style="color:var(--cyan);text-decoration:none">guadeloupe.aeroport.fr</a></span>
+      <span>Flightradar24 : <a href="https://www.flightradar24.com/airport/ptp" target="_blank" style="color:var(--cyan);text-decoration:none">flightradar24.com/ptp</a></span>
+      <span>FlightAware : <a href="https://fr.flightaware.com/live/airport/TFFR" target="_blank" style="color:var(--cyan);text-decoration:none">flightaware.com/TFFR</a></span>
+    </div>
+  </div>
+
+  <!-- COMPAGNIES PRÉSENTES -->
+  <div class="card">
+    <div class="card-title">Compagnies desservant TFFR</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)">Air France</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:2px">CDG · ORY · MIA · YUL</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--cyan);margin-top:3px">Quotidien · Long-courrier</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)">Air Caraïbes</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:2px">ORY · FDF · SBH · SXM</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--cyan);margin-top:3px">Quotidien · Hub PTP</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)">Air Antilles</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:2px">FDF · SBH · GBJ · DSD</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--cyan);margin-top:3px">Régional · Inter-îles</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)">Corsair</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:2px">ORY · NTE (saison)</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--cyan);margin-top:3px">Toute l'année · Saisonnier</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)">American Airlines</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:2px">MIA</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--cyan);margin-top:3px">Quotidien · Oneworld</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 11px">
+        <div style="font-size:12px;font-weight:600;color:var(--white)">TAP Portugal</div>
+        <div style="font-family:var(--fm);font-size:10px;color:var(--muted);margin-top:2px">LIS (saisonnier)</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--cyan);margin-top:3px">Saisonnier · Star Alliance</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROCÉDURES ===== -->
+<div class="panel" id="panel-procedures">
+
+  <div class="card">
+    <div class="card-title">Check-list Arrivée vol <span class="ctag" style="background:var(--green-dim);color:var(--green)" id="cl-progress-arr">0/8</span></div>
+    <div class="checklist" id="cl-arr">
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérifier l'heure d'atterrissage réelle (ATA) vs programmée (STA)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Confirmer affectation porte d'arrivée (T1 ou T2)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérifier présence équipe passerelle / buses</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle équipe bagagistes et position véhicules airside</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification conformité documents bord (LIR, LFP)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle débarquement passagers (TAR) — comptage conforme</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification déchargement soutes — concordance LIR</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Rapport qualité arrivée complété et transmis chef d'équipe</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-arr" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Check-list Départ vol <span class="ctag" style="background:var(--cyan-dim);color:var(--cyan)" id="cl-progress-dep">0/10</span></div>
+    <div class="checklist" id="cl-dep">
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérifier heure limite enregistrement (STD-45min)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle ouverture comptoir enregistrement (check-in)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification agents sûreté en poste aux filtres</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle chargement soutes — concordance LIR</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification avitaillement carburant conforme flight plan</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle catering — conformité repas PAX & équipage</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification embarquement passagers — DCS vs LFP</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Transmission Load Sheet au commandant de bord</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Confirmation Push-back et mise en route</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this,'dep')">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Rapport qualité départ complété — saisie système DCS</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-dep" style="width:0%"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Check-list Sûreté <span class="ctag" style="background:var(--red-dim);color:var(--red)">OBLIGATOIRE</span></div>
+    <div class="checklist">
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Badge aéroportuaire valide et visible (zone réservée)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification habilitation Zone Réservée Côté Piste (ZRCP)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle accès non autorisés — signalement immédiat</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Vérification marquage et signalétique véhicules airside</div><div class="cl-priority p-med">● PRIORITÉ MOYENNE</div></div>
+      </div>
+      <div class="cl-item" onclick="toggleCheck(this)">
+        <div class="cl-cb"></div>
+        <div><div class="cl-text">Contrôle concordance bagages / passagers (100% vol)</div><div class="cl-priority p-high">● PRIORITÉ HAUTE</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== RÉGLEMENTATION ===== -->
+<div class="panel" id="panel-reglements">
+
+  <div class="card">
+    <div class="card-title">Textes réglementaires officiels</div>
+    <div class="docs-grid">
+      <a href="https://www.ecologie.gouv.fr/direction-generale-laviation-civile-dgac-0" target="_blank" class="doc-card">
+        <div class="doc-icon">🏛️</div>
+        <div class="doc-title">DGAC — Direction Générale Aviation Civile</div>
+        <div class="doc-desc">Site officiel de la DGAC. Réglementation, circulaires, agréments assistants en escale</div>
+        <div class="doc-tag" style="background:var(--cyan-dim);color:var(--cyan)">ecologie.gouv.fr</div>
+      </a>
+      <a href="https://www.sia.aviation-civile.gouv.fr/reglementation" target="_blank" class="doc-card">
+        <div class="doc-icon">📡</div>
+        <div class="doc-title">SIA — Service Information Aéronautique</div>
+        <div class="doc-desc">AIP France, NOTAM, cartes aéronautiques, AIP TFFR/PTP</div>
+        <div class="doc-tag" style="background:var(--cyan-dim);color:var(--cyan)">sia.aviation-civile.gouv.fr</div>
+      </a>
+      <a href="https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006074234/" target="_blank" class="doc-card">
+        <div class="doc-icon">⚖️</div>
+        <div class="doc-title">Code de l'Aviation Civile</div>
+        <div class="doc-desc">Code complet en vigueur — Légifrance. Texte de référence légal</div>
+        <div class="doc-tag" style="background:var(--purple-dim);color:var(--purple)">legifrance.gouv.fr</div>
+      </a>
+      <a href="https://www.ecologie.gouv.fr/certification-securite-et-reglementation-des-aerodromes" target="_blank" class="doc-card">
+        <div class="doc-icon">🛂</div>
+        <div class="doc-title">Certification Sécurité Aérodromes</div>
+        <div class="doc-desc">Certificat de sécurité aéroportuaire UE, règlement 2018/1139, DSAC</div>
+        <div class="doc-tag" style="background:var(--amber-dim);color:var(--amber)">ecologie.gouv.fr</div>
+      </a>
+      <a href="https://www.ecologie.gouv.fr/politiques-publiques/transport-marchandises-dangereuses-voie-aerienne" target="_blank" class="doc-card">
+        <div class="doc-icon">☢️</div>
+        <div class="doc-title">Marchandises Dangereuses — SPA-DG</div>
+        <div class="doc-desc">Règlement UE 965/2012. Instructions OACI. Autorisations A88/A99</div>
+        <div class="doc-tag" style="background:var(--red-dim);color:var(--red)">ecologie.gouv.fr</div>
+      </a>
+      <a href="https://www.iata.org/en/programs/safety/ground-operations/" target="_blank" class="doc-card">
+        <div class="doc-icon">🌐</div>
+        <div class="doc-title">IATA — Ground Operations Manual</div>
+        <div class="doc-desc">Standards IATA assistance en escale (IGOM), sécurité piste, bagages</div>
+        <div class="doc-tag" style="background:var(--green-dim);color:var(--green)">iata.org</div>
+      </a>
+      <a href="https://www.icao.int/safety/airnavigation/Pages/default.aspx" target="_blank" class="doc-card">
+        <div class="doc-icon">🌍</div>
+        <div class="doc-title">OACI / ICAO — Annexes Convention Chicago</div>
+        <div class="doc-desc">19 annexes, sûreté (Annex 17), opérations aérodromes (Annex 14)</div>
+        <div class="doc-tag" style="background:var(--blue-dim);color:#60a5fa">icao.int</div>
+      </a>
+      <a href="https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX%3A32012R0965" target="_blank" class="doc-card">
+        <div class="doc-icon">🇪🇺</div>
+        <div class="doc-title">Règlement UE 965/2012</div>
+        <div class="doc-desc">Exigences techniques opérations aériennes. OPS commerciales, SPO, NCC</div>
+        <div class="doc-tag" style="background:var(--purple-dim);color:var(--purple)">eur-lex.europa.eu</div>
+      </a>
+      <a href="https://www.guadeloupe.aeroport.fr/" target="_blank" class="doc-card">
+        <div class="doc-icon">🌴</div>
+        <div class="doc-title">Aéroport Guadeloupe Maryse Condé</div>
+        <div class="doc-desc">Site officiel — vols, procédures, accès zone réservée, demande titres circulation</div>
+        <div class="doc-tag" style="background:var(--green-dim);color:var(--green)">guadeloupe.aeroport.fr</div>
+      </a>
+      <a href="https://www.flightradar24.com/airport/ptp" target="_blank" class="doc-card">
+        <div class="doc-icon">📡</div>
+        <div class="doc-title">Flightradar24 — PTP Live</div>
+        <div class="doc-desc">Suivi temps réel des vols TFFR. ADS-B, position avions, historique</div>
+        <div class="doc-tag" style="background:var(--amber-dim);color:var(--amber)">flightradar24.com</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Documents internes qualité</div>
+    <div class="docs-grid">
+      <div class="doc-card" onclick="showToast('📄 Manuel Qualité — à configurer avec votre chemin réseau')">
+        <div class="doc-icon">📋</div>
+        <div class="doc-title">Manuel Qualité Compagnie (MQ)</div>
+        <div class="doc-desc">Procédures internes, politiques qualité, objectifs, indicateurs KPI</div>
+        <div class="doc-tag" style="background:var(--red-dim);color:var(--red)">Réseau interne</div>
+      </div>
+      <div class="doc-card" onclick="showToast('📄 Procédures SMS — à configurer avec votre chemin réseau')">
+        <div class="doc-icon">🛡️</div>
+        <div class="doc-title">SMS — Safety Management System</div>
+        <div class="doc-desc">Système de gestion de la sécurité, analyse risques, plans d'actions</div>
+        <div class="doc-tag" style="background:var(--red-dim);color:var(--red)">Réseau interne</div>
+      </div>
+      <div class="doc-card" onclick="showToast('📄 Procédures AGS — à configurer avec votre chemin réseau')">
+        <div class="doc-icon">✈️</div>
+        <div class="doc-title">Procédures AGS Assistance Escale</div>
+        <div class="doc-desc">SLA compagnies, procédures piste, gestion retards, irrégularités</div>
+        <div class="doc-tag" style="background:var(--red-dim);color:var(--red)">Réseau interne</div>
+      </div>
+      <div class="doc-card" onclick="showToast('📄 Formulaires qualité — à configurer avec votre chemin réseau')">
+        <div class="doc-icon">📝</div>
+        <div class="doc-title">Formulaires Rapports Qualité</div>
+        <div class="doc-desc">FNI, FNC, fiches d'audit, fiches de suivi indicateurs qualité</div>
+        <div class="doc-tag" style="background:var(--red-dim);color:var(--red)">Réseau interne</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-family:var(--fm);font-size:9px;color:var(--muted);padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+      ℹ️ Les documents internes nécessitent une configuration par votre administrateur système. Remplacer les liens par vos chemins réseau / SharePoint.
+    </div>
+  </div>
+</div>
+
+<!-- ===== CONTACTS ===== -->
+<div class="panel" id="panel-contacts">
+
+  <div class="card">
+    <div class="card-title">Urgences & numéros critiques <span class="ctag" style="background:var(--red-dim);color:var(--red)">24h/24</span></div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--red-dim)">🚨</div>
+        <div><div class="contact-name">Urgences générales</div><div class="contact-role">Police Secours / SAMU / Pompiers</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:18" class="call-btn urg">📞 18/15</a>
+        <a href="tel:112" class="call-btn urg">📞 112</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--red-dim)">🚒</div>
+        <div><div class="contact-name">SSLIA Aéroport PTP</div><div class="contact-role">Service Sauvetage & Lutte Incendie Aéronef</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590590210000" class="call-btn urg">📞 Urgence</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--amber-dim)">🏥</div>
+        <div><div class="contact-name">CHU Guadeloupe — Urgences</div><div class="contact-role">Centre Hospitalier Universitaire</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590590891010" class="call-btn">📞 Appel</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--cyan-dim)">🎙️</div>
+        <div><div class="contact-name">Tour de Contrôle TFFR</div><div class="contact-role">Fréquence TWR : 118.1 MHz · APP : 120.5 MHz</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590590210100" class="call-btn">📞 Direct</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Équipe Qualité & Encadrement</div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--cyan-dim);font-family:var(--fd);font-weight:700;font-size:14px;color:var(--cyan)">RQ</div>
+        <div><div class="contact-name">Responsable Qualité</div><div class="contact-role">Supervision système qualité — Non-conformités</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590690000001" class="call-btn">📞 Appel</a>
+        <a href="sms:+590690000001" class="call-btn">💬 SMS</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--green-dim);font-family:var(--fd);font-weight:700;font-size:14px;color:var(--green)">CE</div>
+        <div><div class="contact-name">Chef d'Équipe Escale</div><div class="contact-role">Supervision opérations piste — Irrégularités</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590690000002" class="call-btn">📞 Appel</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--amber-dim);font-family:var(--fd);font-weight:700;font-size:14px;color:var(--amber)">RS</div>
+        <div><div class="contact-name">Responsable Sûreté</div><div class="contact-role">Accès zones réservées — Incidents sûreté</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590690000003" class="call-btn">📞 Appel</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--purple-dim);font-family:var(--fd);font-weight:700;font-size:14px;color:var(--purple)">DO</div>
+        <div><div class="contact-name">Directeur Opérations</div><div class="contact-role">Escalade incidents majeurs — DG</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590690000004" class="call-btn">📞 Appel</a>
+      </div>
+    </div>
+    <div style="margin-top:10px;font-family:var(--fm);font-size:9px;color:var(--muted);padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)">
+      ℹ️ Remplacez les numéros de téléphone par les contacts réels de votre société via une mise à jour de l'application.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Autorités & Institutions</div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--cyan-dim)">✈️</div>
+        <div><div class="contact-name">DSAC Antilles-Guyane</div><div class="contact-role">Direction Surveillance Activités de l'Aviation Civile</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="https://www.ecologie.gouv.fr/direction-generale-laviation-civile-dgac-0" target="_blank" class="call-btn">🌐 Site</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--green-dim)">🌴</div>
+        <div><div class="contact-name">Direction Aéroport Maryse Condé</div><div class="contact-role">SAS Guadeloupe Pôle Caraïbes</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="https://www.guadeloupe.aeroport.fr/" target="_blank" class="call-btn">🌐 Site</a>
+        <a href="tel:+590590210000" class="call-btn">📞 Standard</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--amber-dim)">👮</div>
+        <div><div class="contact-name">PAF — Police Air et Frontières</div><div class="contact-role">Contrôle frontières, sûreté passagers</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590590210200" class="call-btn">📞 Appel</a>
+      </div>
+    </div>
+    <div class="contact-item">
+      <div class="contact-left">
+        <div class="contact-avatar" style="background:var(--red-dim)">🛃</div>
+        <div><div class="contact-name">Douanes — PTP</div><div class="contact-role">Contrôle bagages, fret, passagers</div></div>
+      </div>
+      <div class="contact-right">
+        <a href="tel:+590590210300" class="call-btn">📞 Appel</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== INCIDENTS ===== -->
+<div class="panel" id="panel-incidents">
+
+  <div class="card">
+    <div class="card-title">Nouveau rapport d'incident / Non-conformité</div>
+    <div class="form-group">
+      <label class="form-label">Vol concerné (ex: AF8440)</label>
+      <input type="text" class="form-input" placeholder="Numéro de vol" id="inc-vol">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date & heure de l'incident</label>
+      <input type="datetime-local" class="form-input" id="inc-date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Catégorie</label>
+      <select class="form-select" id="inc-cat">
+        <option>-- Sélectionner --</option>
+        <option>Irrégularité opérationnelle</option>
+        <option>Non-conformité procédure</option>
+        <option>Incident sûreté</option>
+        <option>Incident piste / véhicule</option>
+        <option>Bagage non conforme</option>
+        <option>Retard imputable sous-traitant</option>
+        <option>Blessure personnel</option>
+        <option>Dommage aéronef</option>
+        <option>Marchandise dangereuse</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Niveau de gravité</label>
+      <div class="severity-grid">
+        <button class="sev-btn s1" onclick="setSeverity(1,this)">1 - Mineur</button>
+        <button class="sev-btn s2" onclick="setSeverity(2,this)">2 - Modéré</button>
+        <button class="sev-btn s3" onclick="setSeverity(3,this)">3 - Sérieux</button>
+        <button class="sev-btn s4 active" onclick="setSeverity(4,this)">4 - Critique</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description détaillée</label>
+      <textarea class="form-textarea" placeholder="Décrivez les faits avec précision : qui, quoi, quand, où, comment..." id="inc-desc"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mesures immédiates prises</label>
+      <textarea class="form-textarea" placeholder="Actions correctives immédiates mises en place..." id="inc-actions" style="min-height:60px"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Agent qualité déclarant</label>
+      <input type="text" class="form-input" placeholder="Nom et matricule" id="inc-agent">
+    </div>
+    <button class="submit-btn" onclick="submitIncident()">📤 Soumettre le rapport</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rapports récents <span class="ctag" style="background:var(--cyan-dim);color:var(--cyan)">Ce jour</span></div>
+    <div style="display:flex;flex-direction:column;gap:7px" id="incidents-list">
+      <div style="background:var(--bg3);border:1px solid var(--red-dim);border-radius:8px;padding:11px;border-left:3px solid var(--red)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-family:var(--fm);font-size:11px;font-weight:700;color:var(--red)">INC-2026-0842</span>
+          <span class="status s-can">Niveau 3</span>
+        </div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:4px">Dommage soute arrière — AF8440 — Chariot bagages impliqué</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--muted)">19 MAR 2026 · 06:42 LT · Agent : J.MARTIN</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--amber-dim);border-radius:8px;padding:11px;border-left:3px solid var(--amber)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+          <span style="font-family:var(--fm);font-size:11px;font-weight:700;color:var(--amber)">NC-2026-0841</span>
+          <span class="status s-del">Niveau 2</span>
+        </div>
+        <div style="font-size:12px;color:var(--text);margin-bottom:4px">Retard embarquement &gt; 20min — TX900 — Passerelle non disponible</div>
+        <div style="font-family:var(--fm);font-size:9px;color:var(--muted)">19 MAR 2026 · 05:15 LT · Agent : M.JOSEPH</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end scroll -->
+
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="nav-btn active" id="nav-dashboard" onclick="switchTab('dashboard')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span class="nav-lbl">Tableau bord</span>
+  </button>
+  <button class="nav-btn" id="nav-vols" onclick="switchTab('vols')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+    <span class="nav-lbl">Vols PTP</span>
+  </button>
+  <button class="nav-btn" id="nav-procedures" onclick="switchTab('procedures')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    <span class="nav-lbl">Procédures</span>
+  </button>
+  <button class="nav-btn" id="nav-reglements" onclick="switchTab('reglements')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <span class="nav-lbl">Réglementation</span>
+  </button>
+  <button class="nav-btn" id="nav-contacts" onclick="switchTab('contacts')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.77 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    <span class="nav-lbl">Contacts</span>
+  </button>
+  <button class="nav-btn" id="nav-incidents" onclick="switchTab('incidents')">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span class="nav-lbl">Incidents</span>
+  </button>
+</nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- CLOCK ----
+function updateClock(){
+  const now=new Date();
+  const utc=new Date(now.getTime());
+  document.getElementById('clock').textContent=now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('hdate').textContent=now.toLocaleDateString('fr-FR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  document.getElementById('fl-date').textContent=now.toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'});
+}
+setInterval(updateClock,1000);updateClock();
+
+// ---- NAV ----
+function switchTab(n){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+n).classList.add('active');
+  document.getElementById('nav-'+n).classList.add('active');
+  document.getElementById('scroll').scrollTop=0;
+}
+
+// ---- TOAST ----
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ---- FLIGHTS DATA ----
+const now=new Date();
+function ht(h,m){const d=new Date();d.setHours(h,m,0);return d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});}
+const flights=[
+  {num:'AF8440',co:'Air France',route:'CDG → PTP',type:'ARR',sta:ht(5,50),eta:ht(6,10),gate:'T1-A1',acft:'Boeing 777',status:'land',qual:'OK'},
+  {num:'TX900',co:'Air Caraïbes',route:'ORY → PTP',type:'ARR',sta:ht(6,20),eta:ht(6,55),gate:'T1-A3',acft:'Airbus A350',status:'del',qual:'RETARD'},
+  {num:'SS978',co:'Corsair',route:'ORY → PTP',type:'ARR',sta:ht(7,5),eta:ht(7,5),gate:'T1-A2',acft:'Boeing 737',status:'land',qual:'OK'},
+  {num:'AA2108',co:'American Airlines',route:'MIA → PTP',type:'ARR',sta:ht(9,30),eta:ht(9,30),gate:'T1-A4',acft:'Boeing 757',status:'s-ok',qual:'PRÉVU'},
+  {num:'3O1234',co:'Air Antilles',route:'FDF → PTP',type:'ARR',sta:ht(10,15),eta:ht(10,15),gate:'T2-B1',acft:'ATR 72',status:'s-ok',qual:'PRÉVU'},
+  {num:'HV6600',co:'Transavia',route:'ORY → PTP',type:'ARR',sta:ht(11,40),eta:ht(12,10),gate:'T1-A2',acft:'Boeing 737',status:'del',qual:'RETARD'},
+  {num:'TP174',co:'TAP Portugal',route:'LIS → PTP',type:'ARR',sta:ht(13,25),eta:ht(13,25),gate:'T1-A3',acft:'Airbus A321',status:'s-ok',qual:'PRÉVU'},
+  {num:'3O1244',co:'Air Antilles',route:'SBH → PTP',type:'ARR',sta:ht(14,50),eta:ht(14,50),gate:'T2-B2',acft:'ATR 42',status:'s-ok',qual:'PRÉVU'},
+  {num:'AF8441',co:'Air France',route:'PTP → CDG',type:'DEP',sta:ht(7,45),eta:ht(8,5),gate:'T1-D1',acft:'Boeing 777',status:'dep',qual:'OK'},
+  {num:'TX901',co:'Air Caraïbes',route:'PTP → ORY',type:'DEP',sta:ht(8,30),eta:ht(8,30),gate:'T1-D3',acft:'Airbus A350',status:'board',qual:'EMBARQ.'},
+  {num:'SS979',co:'Corsair',route:'PTP → ORY',type:'DEP',sta:ht(9,0),eta:ht(9,0),gate:'T1-D2',acft:'Boeing 737',status:'s-ok',qual:'PRÉVU'},
+  {num:'AA2109',co:'American Airlines',route:'PTP → MIA',type:'DEP',sta:ht(11,15),eta:ht(11,15),gate:'T1-D4',acft:'Boeing 757',status:'s-ok',qual:'PRÉVU'},
+  {num:'3O1235',co:'Air Antilles',route:'PTP → FDF',type:'DEP',sta:ht(11,45),eta:ht(11,45),gate:'T2-B1',acft:'ATR 72',status:'s-ok',qual:'PRÉVU'},
+  {num:'AF4820',co:'Air France',route:'PTP → FDF',type:'DEP',sta:ht(12,30),eta:ht(12,45),gate:'T1-D1',acft:'Airbus A320',status:'del',qual:'RETARD'},
+  {num:'HV6601',co:'Transavia',route:'PTP → ORY',type:'DEP',sta:ht(14,20),eta:ht(14,20),gate:'T1-D2',acft:'Boeing 737',status:'s-ok',qual:'PRÉVU'},
+  {num:'3O1245',co:'Air Antilles',route:'PTP → SBH',type:'DEP',sta:ht(16,10),eta:ht(16,10),gate:'T2-B2',acft:'ATR 42',status:'s-ok',qual:'PRÉVU'},
+  {num:'TP175',co:'TAP Portugal',route:'PTP → LIS',type:'DEP',sta:ht(15,30),eta:ht(15,30),gate:'T1-D3',acft:'Airbus A321',status:'s-ok',qual:'PRÉVU'},
+  {num:'AF8443',co:'Air France',route:'PTP → CDG',type:'DEP',sta:ht(21,30),eta:ht(21,30),gate:'T1-D1',acft:'Boeing 777',status:'s-ok',qual:'PRÉVU'},
+];
+
+const statusMap={land:'s-land',dep:'s-dep',del:'s-del',can:'s-can',board:'s-board','s-ok':'s-land'};
+const statusLabel={land:'ATTERRI',dep:'EN VOL',del:'RETARD',can:'ANNULÉ',board:'EMBARQ.','s-ok':'PRÉVU'};
+const qualMap={OK:'up',RETARD:'warn','EMBARQ.':'purple',PRÉVU:'',ANNULÉ:'down'};
+
+function renderFlights(filter='all'){
+  const body=document.getElementById('flights-body');
+  let data=flights;
+  if(filter==='arr') data=flights.filter(f=>f.type==='ARR');
+  else if(filter==='dep') data=flights.filter(f=>f.type==='DEP');
+  else if(filter==='del') data=flights.filter(f=>f.status==='del'||f.status==='can');
+  body.innerHTML=data.map(f=>`
+    <tr>
+      <td><span class="fl-num">${f.num}</span></td>
+      <td><span class="fl-airline">${f.co}</span></td>
+      <td><span class="fl-route">${f.route}</span></td>
+      <td><span class="fl-time">${f.sta}</span></td>
+      <td><span class="fl-time ${f.status==='del'?'warn':''}">${f.eta}</span></td>
+      <td><span class="fl-gate">${f.gate}</span></td>
+      <td style="color:var(--muted)">${f.acft}</td>
+      <td><span class="status ${statusMap[f.status]||'s-land'}">${statusLabel[f.status]||'PRÉVU'}</span></td>
+      <td><span style="color:var(--${f.status==='del'||f.status==='can'?'amber':f.status==='land'||f.status==='dep'?'green':'muted'})">${f.qual}</span></td>
+    </tr>
+  `).join('');
+  const titles={all:'Tous les vols',arr:'Arrivées',dep:'Départs',del:'Vols avec retard'};
+  document.getElementById('flights-title').innerHTML=`${titles[filter]} — <span id="fl-date"></span>`;
+  updateClock();
+}
+function showFlights(filter,btn){
+  document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  renderFlights(filter);
+}
+renderFlights();
+
+// ---- CHECKLISTS ----
+const totals={arr:8,dep:10};
+const counts={arr:0,dep:0};
+function toggleCheck(el,list='arr'){
+  el.classList.toggle('done');
+  const cb=el.querySelector('.cl-cb');
+  cb.textContent=el.classList.contains('done')?'✓':'';
+  const listId=el.closest('[id^="cl-"]')?.id?.replace('cl-','') || list;
+  const items=document.querySelectorAll('#cl-'+listId+' .cl-item');
+  const done=[...items].filter(i=>i.classList.contains('done')).length;
+  const total=items.length;
+  const pct=Math.round(done/total*100);
+  document.getElementById('cl-progress-'+listId).textContent=done+'/'+total;
+  document.getElementById('prog-'+listId).style.width=pct+'%';
+}
+
+// ---- INCIDENTS ----
+let severity=4;
+function setSeverity(n,btn){
+  severity=n;
+  document.querySelectorAll('.sev-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function submitIncident(){
+  const vol=document.getElementById('inc-vol').value;
+  const cat=document.getElementById('inc-cat').value;
+  const desc=document.getElementById('inc-desc').value;
+  if(!vol||cat==='-- Sélectionner --'||!desc){showToast('⚠️ Complétez tous les champs obligatoires');return;}
+  const id='INC-2026-0'+Math.floor(Math.random()*900+843);
+  const now=new Date();
+  const newInc=document.createElement('div');
+  newInc.style.cssText='background:var(--bg3);border:1px solid var(--cyan-dim);border-radius:8px;padding:11px;border-left:3px solid var(--cyan);margin-bottom:7px';
+  newInc.innerHTML=`
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+      <span style="font-family:var(--fm);font-size:11px;font-weight:700;color:var(--cyan)">${id}</span>
+      <span class="status s-land">Niveau ${severity} — Soumis</span>
+    </div>
+    <div style="font-size:12px;color:var(--text);margin-bottom:4px">${cat} — Vol ${vol}</div>
+    <div style="font-family:var(--fm);font-size:9px;color:var(--muted)">${now.toLocaleDateString('fr-FR')} · ${now.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} LT</div>
+  `;
+  document.getElementById('incidents-list').prepend(newInc);
+  document.getElementById('inc-vol').value='';
+  document.getElementById('inc-desc').value='';
+  document.getElementById('inc-actions').value='';
+  showToast('✅ Rapport '+id+' soumis avec succès');
+  document.getElementById('m-inc').textContent=parseInt(document.getElementById('m-inc').textContent)+1;
+}
+</script>
+</body>
+</html>
